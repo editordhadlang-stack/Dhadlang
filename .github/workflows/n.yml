@@ -1,0 +1,87 @@
+name: بناء APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-debug:
+    name: بناء Debug APK
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: استنساخ المستودع
+      uses: actions/checkout@v3
+    
+    - name: إعداد Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: إعطاء صلاحيات gradlew
+      working-directory: Dadelange\ Editor/dhad
+      run: chmod +x ./gradlew
+    
+    - name: بناء Debug APK
+      working-directory: Dadelange\ Editor/dhad
+      run: ./gradlew assembleDebug
+    
+    - name: تحميل Debug APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: Debug-APK
+        path: Dadelange\ Editor/dhad/app/build/outputs/apk/debug/*.apk
+        retention-days: 30
+    
+    - name: إرسال إخطار عند النجاح
+      if: success()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ **تم بناء Debug APK بنجاح!** 🎉'
+          })
+
+  build-release:
+    name: بناء Release APK
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: استنساخ المستودع
+      uses: actions/checkout@v3
+    
+    - name: إعداد Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: إعطاء صلاحيات gradlew
+      working-directory: Dadelange\ Editor/dhad
+      run: chmod +x ./gradlew
+    
+    - name: بناء Release APK
+      working-directory: Dadelange\ Editor/dhad
+      run: ./gradlew assembleRelease
+    
+    - name: تحميل Release APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: Release-APK
+        path: Dadelange\ Editor/dhad/app/build/outputs/apk/release/*.apk
+        retention-days: 90
+    
+    - name: إنشاء Release على GitHub
+      uses: softprops/action-gh-release@v1
+      with:
+        files: Dadelange\ Editor/dhad/app/build/outputs/apk/release/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
