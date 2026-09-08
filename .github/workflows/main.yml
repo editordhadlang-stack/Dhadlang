@@ -1,0 +1,26 @@
+name: Extract Dadelange Editor
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Dadelange Editor Beta.zip"
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract ZIP
+        run: |
+          mkdir -p extracted
+          unzip -o "Dadelange Editor Beta.zip" -d extracted
+
+      - name: Upload extracted files
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dadelange-Editor-Extracted
+          path: extracted/
