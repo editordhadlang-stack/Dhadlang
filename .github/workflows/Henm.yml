@@ -1,0 +1,38 @@
+name: Delete codemagic.yaml
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  delete-codemagic:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Delete codemagic.yaml
+        run: |
+          if [ -f "codemagic.yaml" ]; then
+            rm "codemagic.yaml"
+            echo "codemagic.yaml deleted."
+          else
+            echo "codemagic.yaml not found."
+          fi
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Delete codemagic.yaml"
+            git push
+          fi
